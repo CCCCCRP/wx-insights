@@ -1,0 +1,86 @@
+# Weekly Insights 配置（见 worker/docs/weekly-insights-design.md）
+
+reader_focus:
+  - AI产品化与应用落地
+  - 科技公司战略与组织
+  - 前沿研究的工程实践
+
+# LLM 路由：Phase A/B/C → 云端 DeepSeek；Profile → 本地 Ollama（可选）；Embedding → 本地 bge-m3（必须）
+llm:
+  local:
+    base_url: http://localhost:11434/v1   # Ollama，仅 Profile 画像和 Embedding 使用
+    api_key: ollama
+  cloud:
+    base_url: https://api.deepseek.com    # 也可用 .env OPENAI_BASE_URL
+    # api_key 从 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 读取
+
+phase_a:
+  backend: cloud
+  model: deepseek-v4-flash   # 单篇摘要：快、准、便宜（43 篇约 ¥0.3）
+  max_concurrency: 5         # 云端可提速
+  max_tokens: 2048
+  content_truncate_chars: 4000
+  retry: 2
+
+phase_b:
+  backend: cloud
+  model: deepseek-v4-flash   # 主题聚类：只需 1 次 LLM 调用
+  max_tokens: 16384          # 结构化 JSON；v4-flash 含 reasoning，需留足输出预算
+  cluster_distance_threshold: 0.35
+  target_theme_count_min: 8
+  target_theme_count_max: 15
+
+phase_c:
+  backend: cloud
+  model: deepseek-v4-flash   # 洞见报告，质量优先
+  max_input_tokens: 128000   # DeepSeek 上下文可达 ~1M；周报 43 篇远未吃满
+  max_tokens: 16384          # 报告输出长度
+  context_themes_limit: 15
+  rag_per_theme_limit: 4     # 每个主题最终注入的历史文章数上限
+  rag_per_article_limit: 2   # 主题内每篇 Primary 单独检索 Top-K（宽主题更准）
+  rag_total_limit: 30        # 注入 Phase C 的历史文章总数上限
+  rag_excerpt_chars: 400     # 无摘要时取正文片段长度
+  rag_min_similarity: 0.58          # summary 同空间阈值
+  rag_content_min_similarity: 0.50  # content 回退阈值（跨空间，略低）
+  rag_embedding_mode: hybrid         # hybrid | summary | content | auto
+  rag_tag_filter: true              # 双方都有标签时才要求交集
+
+# Embedding：本地 Ollama + bge-m3（1024 维）
+embedding:
+  backend: ollama
+  model: bge-m3
+  dimensions: 1024
+  ollama_base_url: http://localhost:11434
+  content_truncate_chars: 6000
+  summary_truncate_chars: 2000
+  batch_size: 8
+
+rolling_themes:
+  similarity_threshold: 0.72
+  archive_after_days: 180
+
+profile:
+  backend: cloud
+  model: deepseek-v4-flash   # 与 Phase A 同模型，自动写回 accounts.yaml
+  max_tokens: 8192            # 需要足够大；v4-flash 含 reasoning，2048 会截断 JSON
+  no_think: false
+  min_summaries: 10
+  bootstrap_min_titles: 15   # 摘要不足时用标题 bootstrap
+  recalibrate_days: 90
+
+# 结构化输出截断重试时的上限（Phase A/B/Profile）
+llm_max_tokens_ceiling: 65536
+
+report:
+  email_on_generate: true
+
+# 洞见 HTML 归档到个人博客（可选；无服务器时保持 enabled: false）
+blog:
+  enabled: false
+  base_url: ""
+  remote_dir: /var/www/insights
+  ssh_host: ""
+  ssh_user: root
+  # 密码建议放 .env：BLOG_SSH_PASSWORD=...
+  index_title: 洞见周报归档
+  publish_on_generate: false   # insight 生成后自动 publish-blog（需 enabled + ssh_host）

@@ -1,0 +1,20 @@
+# 密钥与本地运行时
+.env
+**/.credentials.json
+
+# 本地数据
+data/
+
+# 个人配置
+config/accounts.yaml
+
+# 个人/内部文档
+docs/
+
+# Python / 测试
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+.DS_Store

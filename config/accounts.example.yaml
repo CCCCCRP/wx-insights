@@ -1,0 +1,19 @@
+# 微信公众号订阅列表示例
+# 首次使用：cp worker/config/accounts.example.yaml worker/config/accounts.yaml
+# 可只填 nickname（fakeid 留空）；crawl 时会自动 searchbiz 并写回本文件
+# insight_lens: industry | interview | science | business | general
+# insight_profile_locked: true 时跳过自动画像，保留手工配置
+
+accounts:
+  - fakeid: ""
+    nickname: 示例公众号A
+    insight_lens: industry
+    insight_tags: [AI, 行业动态, 产品]
+  - fakeid: ""
+    nickname: 示例公众号B
+    insight_lens: science
+    insight_tags: [科研, 技术前沿]
+  - fakeid: MzA5XXXXXXXXXX==
+    nickname: 已有 fakeid 的公众号
+    insight_lens: business
+    insight_tags: [商业分析, 创业]
