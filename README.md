@@ -4,6 +4,8 @@
 
 从订阅公众号抓取文章，经 LLM 摘要、向量聚类与 RAG 增强，生成结构化 Weekly Insights 报告，并支持邮件推送、静态博客归档与远程数据库同步（均可选）。
 
+**延伸阅读**：[架构与实践（博客）](https://cairuipengtobebetter.top/archives/wei-ming-ming-wen-zhang-Z1ldToPd) · [Weekly Insights 示例](https://cairuipengtobebetter.top/insights/)
+
 ```
 login → crawl → embed → insight (Phase A → B → C) → [email] → [blog] → [db-sync]
 ```
