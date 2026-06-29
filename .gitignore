@@ -8,8 +8,8 @@ data/
 # 个人配置
 config/accounts.yaml
 
-# 个人/内部文档
-docs/
+# 个人/内部文档（仅仓库根目录 docs/，不含 crawl/docs、insight/docs）
+/docs/
 
 # Python / 测试
 __pycache__/

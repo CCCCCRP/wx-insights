@@ -124,7 +124,7 @@ worker/
 - `.env`
 - `config/accounts.yaml`
 - `data/`（日志、归档、报告、同步水位）
-- `docs/`（个人笔记，若存在）
+- `docs/`（仓库根目录个人笔记；`crawl/docs/`、`insight/docs/` 会正常入库）
 
 ## License
 
