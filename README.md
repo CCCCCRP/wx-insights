@@ -52,8 +52,8 @@ cp worker/config/accounts.example.yaml worker/config/accounts.yaml
 # 数据库
 cd worker && docker compose up -d && cd ..
 
-# 或：一键启停（见下方「启停脚本」）
-# worker/scripts/wx-insights.sh start
+# 或一键启动
+worker/start.sh
 
 # 登录 → 采集 → 洞见
 python -m worker login --email
@@ -73,13 +73,8 @@ python -m worker insight --week last
 python -m worker insight embed
 python -m worker insight profile
 
-# 每周全自动（后台挂起示例）
-nohup python -m worker schedule >> worker/data/logs/schedule-daemon.log 2>&1 &
-
-# 推荐：用启停脚本管理 schedule + 数据库
-# worker/scripts/wx-insights.sh start
-# worker/scripts/wx-insights.sh status
-# worker/scripts/wx-insights.sh stop
+# 每周全自动：先 worker/start.sh，结束时 worker/stop.sh
+# 日志：worker/data/logs/schedule-daemon.log
 
 # 可选：博客 / 远程库
 python -m worker insight publish-blog --week last
@@ -108,52 +103,38 @@ BLOG_BASE_URL=https://your-blog.example.com
 
 ## 启停脚本
 
-`worker/scripts/wx-insights.sh` 管理 **PostgreSQL（Docker）** 和 **schedule 每周调度守护进程**。
+仓库根目录提供 `start.sh` / `stop.sh`，管理 **PostgreSQL（Docker）** 和 **schedule 每周调度守护进程**。
 
-> 在 **`worker` 的上一级目录**执行（与 `python -m worker` 相同）。Ollama 需本机单独启动，脚本只做连通性检查。
+在 **`worker` 的上一级目录**执行（与 `python -m worker` 相同）：
 
 ```bash
-# 启动数据库 + schedule 后台守护
-worker/scripts/wx-insights.sh start
-
-# 只看状态（Docker / schedule PID / Ollama）
-worker/scripts/wx-insights.sh status
-
-# 跟踪 schedule 日志
-worker/scripts/wx-insights.sh logs
-
-# 停止全部（先停 schedule，再停数据库）
-worker/scripts/wx-insights.sh stop
-
-# 只启停某一组件
-worker/scripts/wx-insights.sh start db
-worker/scripts/wx-insights.sh stop schedule
-worker/scripts/wx-insights.sh restart schedule
+worker/start.sh    # 启动数据库 + schedule 后台守护
+worker/stop.sh     # 停止 schedule + 数据库
 ```
 
-| 命令 | 作用 |
+| 文件 | 作用 |
 |------|------|
-| `start [all\|db\|schedule]` | 启动（默认 `all`） |
-| `stop [all\|db\|schedule]` | 停止（默认 `all`） |
-| `restart` | 重启 |
-| `status` | 查看 Docker、schedule PID、Ollama |
-| `logs [N]` | `tail -f` schedule 日志（默认 50 行） |
+| `start.sh` | `docker compose up -d`，再 `nohup python -m worker schedule` |
+| `stop.sh` | 结束 schedule 进程，再 `docker compose down` |
 
 - schedule PID：`worker/data/schedule-daemon.pid`
 - schedule 日志：`worker/data/logs/schedule-daemon.log`
-- 指定 Python：`WX_INSIGHTS_PYTHON=/path/to/python worker/scripts/wx-insights.sh start`
+- 指定 Python：`WX_INSIGHTS_PYTHON=/path/to/python worker/start.sh`
+
+Ollama 需本机单独启动（`brew services start ollama` 或 `ollama serve`），启停脚本不管理它。
 
 ## 项目结构
 
 ```
 worker/
+├── start.sh        # 启动（数据库 + schedule）
+├── stop.sh         # 停止
 ├── crawl/          # 公众号采集
 ├── insight/        # Weekly Insights 流水线
 ├── auth/ scan/     # 登录与扫码
 ├── mail/           # SMTP 邮件
 ├── db/             # PostgreSQL + 远程同步
 ├── config/         # accounts.yaml, insight.yaml
-├── scripts/        # wx-insights.sh 启停脚本
 ├── tests/
 └── docker-compose.yml
 ```
